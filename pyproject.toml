@@ -1,0 +1,76 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "augment-to-copilot-metrics"
+version = "0.1.0"
+description = "Convert Augment Analytics API metrics to GitHub Copilot Metrics API format"
+readme = "README.md"
+requires-python = ">=3.9"
+license = {text = "MIT"}
+authors = [
+    {name = "Augment Solutions", email = "support@augmentcode.com"}
+]
+keywords = ["augment", "copilot", "metrics", "analytics", "github"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+
+dependencies = [
+    "requests>=2.31.0",
+    "pydantic>=2.0.0",
+    "pydantic-settings>=2.0.0",
+    "python-dotenv>=1.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4.0",
+    "pytest-cov>=4.1.0",
+    "black>=23.7.0",
+    "ruff>=0.0.285",
+    "mypy>=1.5.0",
+    "types-requests>=2.31.0",
+]
+
+[project.scripts]
+augment-metrics = "augment_metrics.main:main"
+
+[project.urls]
+Homepage = "https://github.com/augment-solutions/augment-to-copilot-metrics"
+Documentation = "https://github.com/augment-solutions/augment-to-copilot-metrics#readme"
+Repository = "https://github.com/augment-solutions/augment-to-copilot-metrics"
+Issues = "https://github.com/augment-solutions/augment-to-copilot-metrics/issues"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.black]
+line-length = 100
+target-version = ["py39", "py310", "py311", "py312"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py39"
+select = ["E", "F", "I", "N", "W", "UP"]
+
+[tool.mypy]
+python_version = "3.9"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = "-v --cov=augment_metrics --cov-report=term-missing"
