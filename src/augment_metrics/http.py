@@ -84,10 +84,12 @@ class HTTPClient:
         session = requests.Session()
         
         # Configure retry strategy
+        # Note: 429 (rate limit) is NOT in status_forcelist so we can handle it
+        # explicitly and raise RateLimitError consistently
         retry_strategy = Retry(
             total=self.max_retries,
             backoff_factor=self.retry_backoff,
-            status_forcelist=[429, 500, 502, 503, 504],
+            status_forcelist=[500, 502, 503, 504],
             allowed_methods=["GET", "POST"],
         )
         
@@ -130,8 +132,12 @@ class HTTPClient:
             RateLimitError: If rate limit exceeded (429)
             HTTPError: For other HTTP errors
         """
+        # Normalize endpoint to ensure it starts with /
+        if not endpoint.startswith("/"):
+            endpoint = f"/{endpoint}"
+
         url = f"{self.base_url}{endpoint}"
-        
+
         logger.debug(f"GET {url} with params: {params}")
         
         try:

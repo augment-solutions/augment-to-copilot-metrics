@@ -61,23 +61,44 @@ class TestHTTPClient:
         mock_response.status_code = 200
         mock_response.json.return_value = {"data": "test"}
         mock_get.return_value = mock_response
-        
+
         client = HTTPClient(
             api_token="test-token",
             base_url="https://api.example.com",
         )
-        
+
         result = client.get("/test-endpoint", params={"key": "value"})
-        
+
         assert result == {"data": "test"}
         mock_get.assert_called_once()
-        
+
         # Check call arguments
         call_args = mock_get.call_args
         assert call_args[0][0] == "https://api.example.com/test-endpoint"
         assert call_args[1]["params"] == {"key": "value"}
         assert "Authorization" in call_args[1]["headers"]
-    
+
+    @patch("augment_metrics.http.requests.Session.get")
+    def test_get_endpoint_normalization(self, mock_get):
+        """Test that endpoints without leading slash are normalized."""
+        # Mock response
+        mock_response = Mock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {"data": "test"}
+        mock_get.return_value = mock_response
+
+        client = HTTPClient(
+            api_token="test-token",
+            base_url="https://api.example.com",
+        )
+
+        # Test endpoint without leading slash
+        result = client.get("analytics/v0/user-activity")
+
+        # Verify the URL was constructed correctly with leading slash added
+        call_args = mock_get.call_args
+        assert call_args[0][0] == "https://api.example.com/analytics/v0/user-activity"
+
     @patch("augment_metrics.http.requests.Session.get")
     def test_get_authentication_error(self, mock_get):
         """Test GET request with 401 authentication error."""
@@ -158,7 +179,19 @@ class TestHTTPClient:
             base_url="https://api.example.com",
             max_retries=5,
         )
-        
+
         # Check that session has adapters
         assert "http://" in client.session.adapters
         assert "https://" in client.session.adapters
+
+        # Verify retry configuration
+        adapter = client.session.get_adapter("https://")
+        retry = adapter.max_retries
+
+        # Verify 429 is NOT in status_forcelist (we handle it explicitly)
+        assert 429 not in retry.status_forcelist
+        # Verify other server errors are in status_forcelist
+        assert 500 in retry.status_forcelist
+        assert 502 in retry.status_forcelist
+        assert 503 in retry.status_forcelist
+        assert 504 in retry.status_forcelist
