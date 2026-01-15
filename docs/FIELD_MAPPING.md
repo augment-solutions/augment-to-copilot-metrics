@@ -75,7 +75,7 @@ From `/analytics/v0/user-activity`:
         "user_initiated_interaction_count": 25
       },
       "agent_edit": {
-        "user_initiated_interaction_count": 45
+        "user_initiated_interaction_count": 53
       }
     }
   ]
