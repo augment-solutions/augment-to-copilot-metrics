@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added (PR #3 - Analytics API Client)
+- `src/augment_metrics/analytics_client.py` - Analytics API client with pagination
+- Comprehensive unit tests for Analytics API client (16 tests)
+- Support for all core Analytics API endpoints:
+  - `/analytics/v0/user-activity` - Per-user metrics
+  - `/analytics/v0/daily-usage` - Organization-wide daily metrics
+  - `/analytics/v0/dau-count` - Daily active user counts
+  - `/analytics/v0/daily-user-activity-by-editor-language` - Editor/language breakdowns
+- Cursor-based pagination for large datasets
+- Date parameter validation (YYYY-MM-DD format)
+- Flexible date filtering (single date or date range)
+
+### Changed
+- Updated `src/augment_metrics/__init__.py` to export Analytics API client
+
+## [0.1.0] - 2026-01-15
+
 ### Added (PR #2 - Authentication Layer)
 - `src/augment_metrics/config.py` - Pydantic-based configuration management
 - `src/augment_metrics/token_auth.py` - Secure API token storage and validation
@@ -17,8 +34,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - Updated `src/augment_metrics/__init__.py` to export new modules
-
-## [0.1.0] - 2026-01-15
 
 ### Added (PR #1 - Project Foundation)
 - Initial project structure (src/, tests/, docs/, scripts/)
