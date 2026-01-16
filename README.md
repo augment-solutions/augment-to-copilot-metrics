@@ -2,14 +2,14 @@
 
 Convert [Augment](https://www.augmentcode.com/) Analytics API metrics to [GitHub Copilot Metrics API](https://docs.github.com/en/enterprise-cloud@latest/rest/copilot/copilot-usage) format.
 
-Perfect for organizations migrating from Augment to GitHub Copilot, comparing metrics between platforms, or integrating Augment usage data into Copilot-compatible analytics tools.
+Perfect for organizations integrating Augment usage data into Copilot-compatible analytics tools.
 
 ## ✨ Key Benefits
 
 ### 🔐 **Simple, Reliable Authentication**
 - ✅ **API tokens** from Augment service accounts (no expiration!)
-- ❌ No more session cookies that expire every hour
-- ❌ No more browser DevTools or manual cookie extraction
+- ✅ Secure Bearer token authentication
+- ✅ No manual cookie extraction needed
 
 ### 🚀 **Automation-Ready**
 - Perfect for **cron jobs** and **CI/CD pipelines**
@@ -18,25 +18,14 @@ Perfect for organizations migrating from Augment to GitHub Copilot, comparing me
 
 ### 📊 **Enhanced Metrics**
 - All standard Augment metrics (completions, chat, agent usage)
-- **New**: Tool usage tracking
-- **New**: Editor and language breakdowns
-- **New**: Service account metrics
+- Tool usage tracking
+- Editor and language breakdowns
+- Service account metrics
 
 ### ⚡ **Easy Setup**
-- **3 simple steps** (vs 11 steps with cookie-based approach)
-- **3-5 minutes** to get running (vs 15-20 minutes)
+- **3 simple steps** to get running
+- **3-5 minutes** setup time
 - Clear error messages and helpful documentation
-
-## 🆚 vs Old Cookie-Based Scraper
-
-| Feature | Old Scraper | This Tool | Improvement |
-|---------|-------------|-----------|-------------|
-| **Setup Time** | 15-20 min | 3-5 min | **75% faster** |
-| **Re-auth** | Every hour | Never | **∞% better** |
-| **API** | Dashboard scraping | Official Analytics API | **Stable & documented** |
-| **Automation** | ❌ Breaks hourly | ✅ Cron-ready | **Reliable** |
-
-See [detailed comparison](docs/OLD_VS_NEW_COMPARISON.md) for more.
 
 ## 🚀 Quick Start
 
@@ -101,7 +90,6 @@ Output location: `./data/` (configurable via `OUTPUT_DIR`)
 ## 📖 Documentation
 
 - [Implementation Plan](docs/IMPLEMENTATION_PLAN.md) - Development roadmap
-- [Old vs New Comparison](docs/OLD_VS_NEW_COMPARISON.md) - Detailed feature comparison
 - [Architecture](docs/ARCHITECTURE.md) - System design and decisions
 - [Field Mapping](docs/FIELD_MAPPING.md) - Augment → Copilot field mappings
 
@@ -224,7 +212,6 @@ See [IMPLEMENTATION_PLAN.md](docs/IMPLEMENTATION_PLAN.md) for the complete devel
 
 - Built on the [Augment Analytics API](https://www.augmentcode.com/)
 - Compatible with [GitHub Copilot Metrics API](https://docs.github.com/en/enterprise-cloud@latest/rest/copilot/copilot-usage)
-- Inspired by the original `dashboard-scraper` tool
 
 ---
 
