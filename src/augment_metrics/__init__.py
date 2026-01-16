@@ -5,14 +5,11 @@ A tool to extract usage metrics from Augment's Analytics API and convert them
 to GitHub Copilot Metrics API format.
 """
 
+from .analytics_client import AnalyticsClient, AnalyticsAPIError, PaginationError
+from .cli import main, parse_args, run_export
 from .config import Config, get_config
-from .http import HTTPClient, HTTPError, AuthenticationError, RateLimitError
+from .http import AuthenticationError, HTTPClient, HTTPError, RateLimitError
 from .token_auth import TokenAuth, TokenAuthError
-from .analytics_client import (
-    AnalyticsClient,
-    AnalyticsAPIError,
-    PaginationError,
-)
 from .transformer import MetricsTransformer, TransformationError
 
 __version__ = "0.1.0"
@@ -38,4 +35,8 @@ __all__ = [
     # Data Transformation
     "MetricsTransformer",
     "TransformationError",
+    # CLI
+    "main",
+    "parse_args",
+    "run_export",
 ]
