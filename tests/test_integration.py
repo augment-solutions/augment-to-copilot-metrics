@@ -64,15 +64,11 @@ class TestIntegration:
             ]
 
             # Create client and fetch data
-            client = AnalyticsClient(
-                api_token="test-token", enterprise_id="test-enterprise"
-            )
+            client = AnalyticsClient(api_token="test-token", enterprise_id="test-enterprise")
 
             test_date = "2026-01-15"
             user_activity = client.fetch_user_activity(date=test_date)
-            dau_count_data = client.fetch_dau_count(
-                start_date=test_date, end_date=test_date
-            )
+            dau_count_data = client.fetch_dau_count(start_date=test_date, end_date=test_date)
 
             # Verify API client returned data
             assert len(user_activity) == 1
@@ -94,9 +90,7 @@ class TestIntegration:
             assert "breakdown" in copilot_metrics
             assert len(copilot_metrics["breakdown"]) == 1
 
-    def test_transformer_to_file_output_integration(
-        self, sample_user_data, temp_output_dir
-    ):
+    def test_transformer_to_file_output_integration(self, sample_user_data, temp_output_dir):
         """Test integration from transformer to file output."""
         transformer = MetricsTransformer()
         test_date = "2026-01-15"
@@ -153,14 +147,10 @@ class TestIntegration:
             ]
 
             # Step 1: Fetch data from API
-            client = AnalyticsClient(
-                api_token="test-token", enterprise_id="test-enterprise"
-            )
+            client = AnalyticsClient(api_token="test-token", enterprise_id="test-enterprise")
             test_date = "2026-01-15"
             user_activity = client.fetch_user_activity(date=test_date)
-            dau_count_data = client.fetch_dau_count(
-                start_date=test_date, end_date=test_date
-            )
+            dau_count_data = client.fetch_dau_count(start_date=test_date, end_date=test_date)
 
             # Step 2: Transform data
             transformer = MetricsTransformer()
@@ -198,4 +188,3 @@ class TestIntegration:
                 rows = list(reader)
                 assert len(rows) == 1
                 assert rows[0]["User"] == "user1@example.com"
-

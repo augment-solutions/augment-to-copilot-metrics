@@ -41,4 +41,3 @@ class TestMain:
             except SystemExit as e:
                 # --version causes sys.exit(0)
                 assert e.code == 0
-

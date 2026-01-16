@@ -14,26 +14,27 @@ logger = logging.getLogger(__name__)
 
 class TransformationError(Exception):
     """Exception raised when data transformation fails."""
+
     pass
 
 
 class MetricsTransformer:
     """
     Transform Augment Analytics metrics to GitHub Copilot Metrics format.
-    
+
     Handles:
     - User-level metrics transformation
     - Organization-level aggregation
     - Field mapping per docs/FIELD_MAPPING.md
     - Service account handling
     - Data validation
-    
+
     Example:
         >>> transformer = MetricsTransformer()
         >>> user_data = [{"user_email": "alice@example.com", "metrics": {...}}]
         >>> copilot_data = transformer.transform_user_metrics(user_data, "2026-01-15")
     """
-    
+
     def transform_user_metrics(
         self,
         user_activity: List[Dict[str, Any]],
@@ -42,15 +43,15 @@ class MetricsTransformer:
     ) -> Dict[str, Any]:
         """
         Transform user activity data to Copilot metrics format.
-        
+
         Args:
             user_activity: List of user activity records from Analytics API
             date_str: Date in YYYY-MM-DD format
             dau_count: Optional daily active user count
-            
+
         Returns:
             Dictionary in Copilot Metrics API format
-            
+
         Raises:
             TransformationError: If transformation fails
         """
@@ -59,30 +60,30 @@ class MetricsTransformer:
             datetime.strptime(date_str, "%Y-%m-%d")
         except ValueError as e:
             raise TransformationError(f"Invalid date format '{date_str}': {e}")
-        
+
         # Transform individual user records
         breakdown = []
         total_engaged_users = 0
         code_completions_engaged = 0
         chat_engaged = 0
-        
+
         for user in user_activity:
             user_metrics = self._transform_user_record(user)
             breakdown.append(user_metrics)
-            
+
             # Count engaged users (users with any activity)
             if self._is_user_engaged(user_metrics):
                 total_engaged_users += 1
-            
+
             # Count users engaged with specific features
             if user_metrics.get("code_generation_activity_count", 0) > 0:
                 code_completions_engaged += 1
             if user_metrics.get("chat_panel", {}).get("user_initiated_interaction_count", 0) > 0:
                 chat_engaged += 1
-        
+
         # Use provided DAU count or fall back to breakdown length
         total_active_users = dau_count if dau_count is not None else len(breakdown)
-        
+
         # Validate data integrity
         if total_active_users < total_engaged_users:
             logger.warning(
@@ -90,7 +91,7 @@ class MetricsTransformer:
                 f"Setting total_active_users = total_engaged_users"
             )
             total_active_users = total_engaged_users
-        
+
         return {
             "date": date_str,
             "total_active_users": total_active_users,
@@ -98,49 +99,40 @@ class MetricsTransformer:
             "copilot_ide_code_completions": {
                 "total_engaged_users": code_completions_engaged,
                 "languages": [],
-                "editors": []
+                "editors": [],
             },
-            "copilot_ide_chat": {
-                "total_engaged_users": chat_engaged,
-                "editors": []
-            },
-            "copilot_dotcom_chat": {
-                "total_engaged_users": 0,
-                "models": []
-            },
-            "copilot_dotcom_pull_requests": {
-                "total_engaged_users": 0,
-                "repositories": []
-            },
-            "breakdown": breakdown
+            "copilot_ide_chat": {"total_engaged_users": chat_engaged, "editors": []},
+            "copilot_dotcom_chat": {"total_engaged_users": 0, "models": []},
+            "copilot_dotcom_pull_requests": {"total_engaged_users": 0, "repositories": []},
+            "breakdown": breakdown,
         }
-    
+
     def _transform_user_record(self, user: Dict[str, Any]) -> Dict[str, Any]:
         """
         Transform a single user activity record.
-        
+
         Args:
             user: User activity record from Analytics API
-            
+
         Returns:
             User metrics in Copilot format
         """
         metrics = user.get("metrics", {})
-        
+
         # Calculate agent edit interactions (sum of all agent messages)
         agent_interactions = (
-            metrics.get("remote_agent_messages", 0) +
-            metrics.get("ide_agent_messages", 0) +
-            metrics.get("cli_agent_interactive_messages", 0) +
-            metrics.get("cli_agent_non_interactive_messages", 0)
+            metrics.get("remote_agent_messages", 0)
+            + metrics.get("ide_agent_messages", 0)
+            + metrics.get("cli_agent_interactive_messages", 0)
+            + metrics.get("cli_agent_non_interactive_messages", 0)
         )
-        
+
         # Calculate agent edit LOC (sum of all agent LOC)
         agent_loc = (
-            metrics.get("remote_agent_lines_of_code", 0) +
-            metrics.get("ide_agent_lines_of_code", 0) +
-            metrics.get("cli_agent_interactive_lines_of_code", 0) +
-            metrics.get("cli_agent_non_interactive_lines_of_code", 0)
+            metrics.get("remote_agent_lines_of_code", 0)
+            + metrics.get("ide_agent_lines_of_code", 0)
+            + metrics.get("cli_agent_interactive_lines_of_code", 0)
+            + metrics.get("cli_agent_non_interactive_lines_of_code", 0)
         )
 
         # Build user record in Copilot format
@@ -150,20 +142,19 @@ class MetricsTransformer:
             "code_generation_activity_count": metrics.get("completions_count", 0),
             "code_acceptance_activity_count": metrics.get("completions_accepted", 0),
             "loc_added_sum": metrics.get("total_modified_lines_of_code", 0),
-            "chat_panel": {
-                "user_initiated_interaction_count": metrics.get("chat_messages", 0)
-            },
+            "chat_panel": {"user_initiated_interaction_count": metrics.get("chat_messages", 0)},
             "agent_edit": {
                 "user_initiated_interaction_count": agent_interactions,
-                "loc_added_sum": agent_loc
+                "loc_added_sum": agent_loc,
             },
-            "code_completions": {
-                "loc_added_sum": metrics.get("completions_lines_of_code", 0)
-            }
+            "code_completions": {"loc_added_sum": metrics.get("completions_lines_of_code", 0)},
         }
 
         # Validate data integrity
-        if user_record["code_acceptance_activity_count"] > user_record["code_generation_activity_count"]:
+        if (
+            user_record["code_acceptance_activity_count"]
+            > user_record["code_generation_activity_count"]
+        ):
             logger.warning(
                 f"User {user_record['user_email']}: code_acceptance_activity_count "
                 f"({user_record['code_acceptance_activity_count']}) > code_generation_activity_count "
@@ -183,9 +174,9 @@ class MetricsTransformer:
             True if user has any activity, False otherwise
         """
         return (
-            user_metrics.get("code_generation_activity_count", 0) > 0 or
-            user_metrics.get("chat_panel", {}).get("user_initiated_interaction_count", 0) > 0 or
-            user_metrics.get("agent_edit", {}).get("user_initiated_interaction_count", 0) > 0
+            user_metrics.get("code_generation_activity_count", 0) > 0
+            or user_metrics.get("chat_panel", {}).get("user_initiated_interaction_count", 0) > 0
+            or user_metrics.get("agent_edit", {}).get("user_initiated_interaction_count", 0) > 0
         )
 
     def transform_to_csv_row(self, user: Dict[str, Any]) -> Dict[str, Any]:
@@ -202,15 +193,14 @@ class MetricsTransformer:
 
         # Calculate Copilot-format fields
         agent_interactions = (
-            metrics.get("remote_agent_messages", 0) +
-            metrics.get("ide_agent_messages", 0) +
-            metrics.get("cli_agent_interactive_messages", 0) +
-            metrics.get("cli_agent_non_interactive_messages", 0)
+            metrics.get("remote_agent_messages", 0)
+            + metrics.get("ide_agent_messages", 0)
+            + metrics.get("cli_agent_interactive_messages", 0)
+            + metrics.get("cli_agent_non_interactive_messages", 0)
         )
 
-        cli_agent_loc = (
-            metrics.get("cli_agent_interactive_lines_of_code", 0) +
-            metrics.get("cli_agent_non_interactive_lines_of_code", 0)
+        cli_agent_loc = metrics.get("cli_agent_interactive_lines_of_code", 0) + metrics.get(
+            "cli_agent_non_interactive_lines_of_code", 0
         )
 
         return {
@@ -234,4 +224,3 @@ class MetricsTransformer:
             "Copilot Chat Interactions": metrics.get("chat_messages", 0),
             "Copilot Agent Interactions": agent_interactions,
         }
-
