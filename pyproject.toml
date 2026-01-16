@@ -42,7 +42,7 @@ dev = [
 ]
 
 [project.scripts]
-augment-metrics = "augment_metrics.main:main"
+augment-metrics = "augment_metrics.cli:main"
 
 [project.urls]
 Homepage = "https://github.com/augment-solutions/augment-to-copilot-metrics"

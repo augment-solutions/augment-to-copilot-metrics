@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added (PR #6 - CLI and Configuration)
+- `src/augment_metrics/cli.py` - Command-line interface module (391 lines)
+- `src/augment_metrics/__main__.py` - Module entry point for `python -m augment_metrics`
+- `tests/test_cli.py` - Comprehensive CLI tests (23 tests)
+- CLI commands:
+  - `--last-28-days` - Export last 28 days of metrics
+  - `--start-date/--end-date` - Export custom date range
+  - `--output-dir` - Specify output directory
+  - `--aggregate` - Generate aggregated JSON file
+  - `--csv-only` - Only generate CSV output
+  - `--json-only` - Only generate JSON output
+  - `--verbose` - Enable debug logging
+- Environment variable support via `.env` file
+- Automatic output directory creation
+- User-friendly error messages and logging
+- Exit codes for scripting
+
+### Changed
+- Updated `src/augment_metrics/__init__.py` to export CLI functions
+- CLI now uses `AnalyticsClient` directly (no intermediate HTTPClient)
+- Configuration loaded from environment variables via `Config` class
+
 ### Added (PR #4 - Data Transformation Layer)
 - `src/augment_metrics/transformer.py` - Metrics transformation module
 - Comprehensive unit tests for transformer (10 tests)
