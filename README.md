@@ -37,8 +37,29 @@ Perfect for organizations integrating Augment usage data into Copilot-compatible
 
 ### Installation
 
+**Option 1: Install from GitHub (Recommended)**
 ```bash
-pip install augment-to-copilot-metrics
+pip install git+https://github.com/augment-solutions/augment-to-copilot-metrics.git
+```
+
+**Option 2: Clone and Install Locally**
+```bash
+# Clone the repository
+git clone https://github.com/augment-solutions/augment-to-copilot-metrics.git
+cd augment-to-copilot-metrics
+
+# Install the package
+pip install .
+```
+
+**Option 3: Development Installation**
+```bash
+# Clone the repository
+git clone https://github.com/augment-solutions/augment-to-copilot-metrics.git
+cd augment-to-copilot-metrics
+
+# Install in editable mode (for development)
+pip install -e .
 ```
 
 ### Setup (One-Time)
