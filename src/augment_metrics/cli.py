@@ -14,7 +14,7 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from typing import List, Optional
 
-from .analytics_client import AnalyticsClient, AnalyticsAPIError
+from .analytics_client import AnalyticsClient, AnalyticsAPIError, PaginationError
 from .config import Config, get_config
 from .http import HTTPError, AuthenticationError, RateLimitError
 from .transformer import MetricsTransformer, TransformationError
@@ -304,8 +304,17 @@ def run_export(args: argparse.Namespace) -> int:
             end_date=end_date
         )
 
-        # For simplicity, use the first DAU count if available
-        dau_count = dau_data[0]["active_user_count"] if dau_data else None
+        # Calculate total DAU count across the date range
+        # Use 'active_users' field (as per API spec and tests)
+        dau_count = None
+        if dau_data:
+            try:
+                # Sum active users across all days in the range
+                dau_count = sum(day.get("active_users", 0) for day in dau_data)
+                logger.info(f"Total active users across date range: {dau_count}")
+            except (KeyError, TypeError) as e:
+                logger.warning(f"Could not extract DAU count from API response: {e}")
+                dau_count = None
 
         # Transform to Copilot format
         logger.info("Transforming metrics to Copilot format...")
@@ -322,6 +331,48 @@ def run_export(args: argparse.Namespace) -> int:
             json_filepath = output_dir / json_filename
             write_json_file(copilot_data, json_filepath)
 
+            # Write aggregated JSON file if requested
+            if args.aggregate:
+                # Create aggregated summary with totals across all users
+                aggregate_data = {
+                    "date_range": {
+                        "start": start_date,
+                        "end": end_date
+                    },
+                    "summary": {
+                        "total_active_users": copilot_data.get("total_active_users", 0),
+                        "total_engaged_users": copilot_data.get("total_engaged_users", 0),
+                        "total_users_in_breakdown": len(copilot_data.get("breakdown", [])),
+                    },
+                    "aggregated_metrics": {
+                        "total_code_generation_activity": sum(
+                            user.get("code_generation_activity_count", 0)
+                            for user in copilot_data.get("breakdown", [])
+                        ),
+                        "total_code_acceptance_activity": sum(
+                            user.get("code_acceptance_activity_count", 0)
+                            for user in copilot_data.get("breakdown", [])
+                        ),
+                        "total_loc_added": sum(
+                            user.get("loc_added_sum", 0)
+                            for user in copilot_data.get("breakdown", [])
+                        ),
+                        "total_chat_interactions": sum(
+                            user.get("chat_panel", {}).get("user_initiated_interaction_count", 0)
+                            for user in copilot_data.get("breakdown", [])
+                        ),
+                        "total_agent_interactions": sum(
+                            user.get("agent_edit", {}).get("user_initiated_interaction_count", 0)
+                            for user in copilot_data.get("breakdown", [])
+                        ),
+                    },
+                    "full_data": copilot_data
+                }
+
+                aggregate_filename = f"copilot_metrics_aggregate_{start_date}_to_{end_date}.json"
+                aggregate_filepath = output_dir / aggregate_filename
+                write_json_file(aggregate_data, aggregate_filepath)
+
         if not args.json_only:
             # Write CSV file
             csv_rows = [transformer.transform_to_csv_row(user) for user in user_activity]
@@ -333,6 +384,8 @@ def run_export(args: argparse.Namespace) -> int:
         print(f"\n✅ Export complete!")
         print(f"   Date range: {start_date} to {end_date}")
         print(f"   Users: {len(user_activity)}")
+        if args.aggregate and not args.csv_only:
+            print(f"   Aggregate file: Generated")
         print(f"   Output: {output_dir.absolute()}")
 
         return 0
@@ -347,6 +400,18 @@ def run_export(args: argparse.Namespace) -> int:
         logger.error(f"Rate limit exceeded: {e}")
         print(f"\n❌ Rate Limit Error: {e}", file=sys.stderr)
         print("   Please try again later or reduce the date range", file=sys.stderr)
+        return 1
+
+    except PaginationError as e:
+        logger.error(f"Pagination error: {e}")
+        print(f"\n❌ API Pagination Error: {e}", file=sys.stderr)
+        print("   The API returned unexpected data during pagination", file=sys.stderr)
+        return 1
+
+    except AnalyticsAPIError as e:
+        logger.error(f"Analytics API error: {e}")
+        print(f"\n❌ Analytics API Error: {e}", file=sys.stderr)
+        print("   Failed to fetch data from Analytics API", file=sys.stderr)
         return 1
 
     except HTTPError as e:
