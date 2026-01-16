@@ -258,7 +258,6 @@ class TestRunExport:
 
         # Set environment variables
         monkeypatch.setenv("AUGMENT_API_TOKEN", "test-token")
-        monkeypatch.setenv("ENTERPRISE_ID", "test-enterprise")
         monkeypatch.setenv("OUTPUT_DIR", str(tmp_path))
 
         # Run export

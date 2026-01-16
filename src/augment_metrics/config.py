@@ -41,12 +41,6 @@ class Config(BaseSettings):
         min_length=1,
     )
 
-    enterprise_id: str = Field(
-        ...,
-        description="Augment Enterprise ID",
-        min_length=1,
-    )
-
     # Optional: API Configuration
     analytics_api_base_url: str = Field(
         default="https://api.augmentcode.com",

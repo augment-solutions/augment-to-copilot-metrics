@@ -56,7 +56,6 @@ pip install augment-to-copilot-metrics
 3. **Configure environment**:
    ```bash
    export AUGMENT_API_TOKEN="your-token-here"
-   export ENTERPRISE_ID="your-enterprise-id"
    ```
 
 ### Usage

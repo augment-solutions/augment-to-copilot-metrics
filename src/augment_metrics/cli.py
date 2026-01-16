@@ -52,7 +52,6 @@ Examples:
 
 Environment Variables:
   AUGMENT_API_TOKEN    API token from Augment service account
-  ENTERPRISE_ID        Your Augment enterprise ID
   OUTPUT_DIR           Output directory (default: ./data)
   LOG_LEVEL            Logging level (default: INFO)
         """,
@@ -259,21 +258,19 @@ def run_export(args: argparse.Namespace) -> int:
         # Initialize clients
         logger.info("Initializing API client...")
 
-        # Get API token and enterprise ID from config
+        # Get API token from config
         api_token = config.augment_api_token
-        enterprise_id = config.enterprise_id
 
         # Initialize Analytics client
         analytics_client = AnalyticsClient(
             api_token=api_token,
-            enterprise_id=enterprise_id,
             base_url=config.analytics_api_base_url,
             timeout=config.request_timeout_seconds,
             max_retries=config.max_retries,
         )
         transformer = MetricsTransformer()
 
-        logger.info(f"Connected to {config.analytics_api_base_url} (Enterprise: {enterprise_id})")
+        logger.info(f"Connected to {config.analytics_api_base_url}")
 
         # Fetch and transform data
         logger.info("Fetching user activity data...")
@@ -371,7 +368,7 @@ def run_export(args: argparse.Namespace) -> int:
     except AuthenticationError as e:
         logger.error(f"Authentication failed: {e}")
         print(f"\n❌ Authentication Error: {e}", file=sys.stderr)
-        print("   Please check your AUGMENT_API_TOKEN and ENTERPRISE_ID", file=sys.stderr)
+        print("   Please check your AUGMENT_API_TOKEN", file=sys.stderr)
         return 1
 
     except RateLimitError as e:

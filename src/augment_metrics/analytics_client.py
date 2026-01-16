@@ -37,7 +37,6 @@ class AnalyticsClient:
     Example:
         >>> client = AnalyticsClient(
         ...     api_token="your-token",
-        ...     enterprise_id="your-enterprise-id",
         ...     base_url="https://api.augmentcode.com"
         ... )
         >>>
@@ -51,7 +50,6 @@ class AnalyticsClient:
     def __init__(
         self,
         api_token: str,
-        enterprise_id: str,
         base_url: str = "https://api.augmentcode.com",
         timeout: int = 60,
         max_retries: int = 3,
@@ -62,7 +60,6 @@ class AnalyticsClient:
 
         Args:
             api_token: Augment API token
-            enterprise_id: Augment Enterprise ID
             base_url: Base URL for Analytics API
             timeout: Request timeout in seconds
             max_retries: Maximum number of retries for failed requests
@@ -72,7 +69,6 @@ class AnalyticsClient:
         if not isinstance(page_size, int) or page_size <= 0:
             raise ValueError(f"page_size must be a positive integer, got {page_size}")
 
-        self.enterprise_id = enterprise_id
         self.page_size = page_size
         self.http_client = HTTPClient(
             api_token=api_token,
@@ -80,7 +76,7 @@ class AnalyticsClient:
             timeout=timeout,
             max_retries=max_retries,
         )
-        logger.info(f"Initialized AnalyticsClient for enterprise {enterprise_id}")
+        logger.info("Initialized AnalyticsClient")
 
     def _validate_date(self, date_str: str) -> str:
         """
@@ -200,7 +196,7 @@ class AnalyticsClient:
             AnalyticsAPIError: If API request fails
 
         Example:
-            >>> client = AnalyticsClient(api_token="token", enterprise_id="ent-123")
+            >>> client = AnalyticsClient(api_token="token")
             >>>
             >>> # Fetch for a single date
             >>> activity = client.fetch_user_activity(date="2026-01-15")
@@ -211,7 +207,7 @@ class AnalyticsClient:
             ...     end_date="2026-01-15"
             ... )
         """
-        params = {"enterprise_id": self.enterprise_id}
+        params = {}
 
         # Validate date parameters
         if date and (start_date or end_date):
@@ -257,14 +253,13 @@ class AnalyticsClient:
             AnalyticsAPIError: If API request fails
 
         Example:
-            >>> client = AnalyticsClient(api_token="token", enterprise_id="ent-123")
+            >>> client = AnalyticsClient(api_token="token")
             >>> usage = client.fetch_daily_usage(
             ...     start_date="2026-01-01",
             ...     end_date="2026-01-15"
             ... )
         """
         params = {
-            "enterprise_id": self.enterprise_id,
             "start_date": self._validate_date(start_date),
             "end_date": self._validate_date(end_date),
         }
@@ -299,14 +294,13 @@ class AnalyticsClient:
             AnalyticsAPIError: If API request fails
 
         Example:
-            >>> client = AnalyticsClient(api_token="token", enterprise_id="ent-123")
+            >>> client = AnalyticsClient(api_token="token")
             >>> dau = client.fetch_dau_count(
             ...     start_date="2026-01-01",
             ...     end_date="2026-01-15"
             ... )
         """
         params = {
-            "enterprise_id": self.enterprise_id,
             "start_date": self._validate_date(start_date),
             "end_date": self._validate_date(end_date),
         }
@@ -343,10 +337,10 @@ class AnalyticsClient:
             AnalyticsAPIError: If API request fails
 
         Example:
-            >>> client = AnalyticsClient(api_token="token", enterprise_id="ent-123")
+            >>> client = AnalyticsClient(api_token="token")
             >>> breakdown = client.fetch_editor_language_breakdown(date="2026-01-15")
         """
-        params = {"enterprise_id": self.enterprise_id}
+        params = {}
 
         # Validate date parameters
         if date and (start_date or end_date):

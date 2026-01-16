@@ -21,14 +21,12 @@ class TestAnalyticsClient:
         """Test AnalyticsClient initialization."""
         client = AnalyticsClient(
             api_token="test-token",
-            enterprise_id="ent-123",
             base_url="https://api.example.com",
             timeout=60,
             max_retries=5,
             page_size=50,
         )
 
-        assert client.enterprise_id == "ent-123"
         assert client.page_size == 50
         assert client.http_client.api_token == "test-token"
         assert client.http_client.base_url == "https://api.example.com"
@@ -38,7 +36,6 @@ class TestAnalyticsClient:
         with pytest.raises(ValueError, match="page_size must be a positive integer"):
             AnalyticsClient(
                 api_token="test-token",
-                enterprise_id="ent-123",
                 page_size=0,
             )
 
@@ -47,7 +44,6 @@ class TestAnalyticsClient:
         with pytest.raises(ValueError, match="page_size must be a positive integer"):
             AnalyticsClient(
                 api_token="test-token",
-                enterprise_id="ent-123",
                 page_size=-10,
             )
 
@@ -55,7 +51,6 @@ class TestAnalyticsClient:
         """Test date validation with valid dates."""
         client = AnalyticsClient(
             api_token="test-token",
-            enterprise_id="ent-123",
         )
 
         assert client._validate_date("2026-01-15") == "2026-01-15"
@@ -66,7 +61,6 @@ class TestAnalyticsClient:
         """Test date validation with invalid dates."""
         client = AnalyticsClient(
             api_token="test-token",
-            enterprise_id="ent-123",
         )
 
         with pytest.raises(ValueError, match="Invalid date format"):
@@ -83,7 +77,6 @@ class TestAnalyticsClient:
         """Test pagination with single page response."""
         client = AnalyticsClient(
             api_token="test-token",
-            enterprise_id="ent-123",
             page_size=10,
         )
 
@@ -112,7 +105,6 @@ class TestAnalyticsClient:
         """Test pagination with multiple pages."""
         client = AnalyticsClient(
             api_token="test-token",
-            enterprise_id="ent-123",
             page_size=2,
         )
 
@@ -136,7 +128,6 @@ class TestAnalyticsClient:
         """Test pagination with empty response."""
         client = AnalyticsClient(
             api_token="test-token",
-            enterprise_id="ent-123",
         )
 
         mock_get.return_value = {"data": [], "pagination": {"next_cursor": None}}
@@ -150,7 +141,6 @@ class TestAnalyticsClient:
         """Test pagination with HTTP error."""
         client = AnalyticsClient(
             api_token="test-token",
-            enterprise_id="ent-123",
         )
 
         mock_get.side_effect = HTTPError("Connection failed")
@@ -163,7 +153,6 @@ class TestAnalyticsClient:
         """Test pagination with invalid response type."""
         client = AnalyticsClient(
             api_token="test-token",
-            enterprise_id="ent-123",
         )
 
         mock_get.return_value = ["not", "a", "dict"]
@@ -176,7 +165,6 @@ class TestAnalyticsClient:
         """Test pagination with invalid data type."""
         client = AnalyticsClient(
             api_token="test-token",
-            enterprise_id="ent-123",
         )
 
         mock_get.return_value = {"data": "not a list", "pagination": {"next_cursor": None}}
@@ -189,7 +177,6 @@ class TestAnalyticsClient:
         """Test pagination with invalid pagination type (not a dict)."""
         client = AnalyticsClient(
             api_token="test-token",
-            enterprise_id="ent-123",
         )
 
         mock_get.return_value = {"data": [{"id": 1}], "pagination": None}  # Should be a dict
@@ -202,7 +189,6 @@ class TestAnalyticsClient:
         """Test fetching user activity for a single date."""
         client = AnalyticsClient(
             api_token="test-token",
-            enterprise_id="ent-123",
         )
 
         mock_get.return_value = {
@@ -221,7 +207,6 @@ class TestAnalyticsClient:
         # Verify API call
         call_args = mock_get.call_args
         assert call_args[0][0] == "/analytics/v0/user-activity"
-        assert call_args[1]["params"]["enterprise_id"] == "ent-123"
         assert call_args[1]["params"]["date"] == "2026-01-15"
 
     @patch("augment_metrics.analytics_client.HTTPClient.get")
@@ -229,7 +214,6 @@ class TestAnalyticsClient:
         """Test fetching user activity for a date range."""
         client = AnalyticsClient(
             api_token="test-token",
-            enterprise_id="ent-123",
         )
 
         mock_get.return_value = {
@@ -250,7 +234,6 @@ class TestAnalyticsClient:
         """Test fetch_user_activity with invalid parameters."""
         client = AnalyticsClient(
             api_token="test-token",
-            enterprise_id="ent-123",
         )
 
         # Cannot specify both date and start_date/end_date
@@ -269,7 +252,6 @@ class TestAnalyticsClient:
         """Test fetching daily usage metrics."""
         client = AnalyticsClient(
             api_token="test-token",
-            enterprise_id="ent-123",
         )
 
         mock_get.return_value = {
@@ -288,7 +270,6 @@ class TestAnalyticsClient:
         # Verify API call
         call_args = mock_get.call_args
         assert call_args[0][0] == "/analytics/v0/daily-usage"
-        assert call_args[1]["params"]["enterprise_id"] == "ent-123"
         assert call_args[1]["params"]["start_date"] == "2026-01-01"
         assert call_args[1]["params"]["end_date"] == "2026-01-02"
 
@@ -297,7 +278,6 @@ class TestAnalyticsClient:
         """Test fetching DAU count metrics."""
         client = AnalyticsClient(
             api_token="test-token",
-            enterprise_id="ent-123",
         )
 
         mock_get.return_value = {
@@ -316,14 +296,12 @@ class TestAnalyticsClient:
         # Verify API call
         call_args = mock_get.call_args
         assert call_args[0][0] == "/analytics/v0/dau-count"
-        assert call_args[1]["params"]["enterprise_id"] == "ent-123"
 
     @patch("augment_metrics.analytics_client.HTTPClient.get")
     def test_fetch_editor_language_breakdown(self, mock_get):
         """Test fetching editor/language breakdown."""
         client = AnalyticsClient(
             api_token="test-token",
-            enterprise_id="ent-123",
         )
 
         mock_get.return_value = {
@@ -354,7 +332,6 @@ class TestAnalyticsClient:
         """Test fetching editor/language breakdown for date range."""
         client = AnalyticsClient(
             api_token="test-token",
-            enterprise_id="ent-123",
         )
 
         mock_get.return_value = {

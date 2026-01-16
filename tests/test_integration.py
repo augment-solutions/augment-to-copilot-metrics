@@ -64,7 +64,7 @@ class TestIntegration:
             ]
 
             # Create client and fetch data
-            client = AnalyticsClient(api_token="test-token", enterprise_id="test-enterprise")
+            client = AnalyticsClient(api_token="test-token")
 
             test_date = "2026-01-15"
             user_activity = client.fetch_user_activity(date=test_date)
@@ -147,7 +147,7 @@ class TestIntegration:
             ]
 
             # Step 1: Fetch data from API
-            client = AnalyticsClient(api_token="test-token", enterprise_id="test-enterprise")
+            client = AnalyticsClient(api_token="test-token")
             test_date = "2026-01-15"
             user_activity = client.fetch_user_activity(date=test_date)
             dau_count_data = client.fetch_dau_count(start_date=test_date, end_date=test_date)
