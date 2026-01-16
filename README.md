@@ -29,9 +29,6 @@ Perfect for organizations integrating Augment usage data into Copilot-compatible
 
 ## 🚀 Quick Start
 
-
-> **Note**: This section describes the planned interface. The CLI implementation will be added in PR #2-#6. 
-> See [IMPLEMENTATION_PLAN.md](docs/IMPLEMENTATION_PLAN.md) for the development roadmap.
 ### Prerequisites
 
 - Python 3.9 or higher
