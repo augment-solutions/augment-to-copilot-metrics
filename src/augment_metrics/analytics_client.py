@@ -66,6 +66,10 @@ class AnalyticsClient:
             max_retries: Maximum number of retries for failed requests
             page_size: Number of items per page for paginated requests
         """
+        # Validate page_size is a positive integer
+        if not isinstance(page_size, int) or page_size <= 0:
+            raise ValueError(f"page_size must be a positive integer, got {page_size}")
+
         self.enterprise_id = enterprise_id
         self.page_size = page_size
         self.http_client = HTTPClient(
@@ -154,6 +158,9 @@ class AnalyticsClient:
             
             # Check if there are more pages
             pagination = response.get("pagination", {})
+            if not isinstance(pagination, dict):
+                raise PaginationError(f"Invalid pagination type: expected dict, got {type(pagination)}")
+
             cursor = pagination.get("next_cursor")
             
             logger.debug(f"Page {page_num}: {len(data)} items, next_cursor: {cursor}")

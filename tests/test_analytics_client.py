@@ -32,7 +32,25 @@ class TestAnalyticsClient:
         assert client.page_size == 50
         assert client.http_client.api_token == "test-token"
         assert client.http_client.base_url == "https://api.example.com"
-    
+
+    def test_init_invalid_page_size_zero(self):
+        """Test AnalyticsClient initialization with page_size=0."""
+        with pytest.raises(ValueError, match="page_size must be a positive integer"):
+            AnalyticsClient(
+                api_token="test-token",
+                enterprise_id="ent-123",
+                page_size=0,
+            )
+
+    def test_init_invalid_page_size_negative(self):
+        """Test AnalyticsClient initialization with negative page_size."""
+        with pytest.raises(ValueError, match="page_size must be a positive integer"):
+            AnalyticsClient(
+                api_token="test-token",
+                enterprise_id="ent-123",
+                page_size=-10,
+            )
+
     def test_validate_date_valid(self):
         """Test date validation with valid dates."""
         client = AnalyticsClient(
@@ -180,7 +198,23 @@ class TestAnalyticsClient:
         
         with pytest.raises(PaginationError, match="Invalid data type"):
             list(client._paginate("/test-endpoint"))
-    
+
+    @patch("augment_metrics.analytics_client.HTTPClient.get")
+    def test_paginate_invalid_pagination_type(self, mock_get):
+        """Test pagination with invalid pagination type (not a dict)."""
+        client = AnalyticsClient(
+            api_token="test-token",
+            enterprise_id="ent-123",
+        )
+
+        mock_get.return_value = {
+            "data": [{"id": 1}],
+            "pagination": None  # Should be a dict
+        }
+
+        with pytest.raises(PaginationError, match="Invalid pagination type"):
+            list(client._paginate("/test-endpoint"))
+
     @patch("augment_metrics.analytics_client.HTTPClient.get")
     def test_fetch_user_activity_single_date(self, mock_get):
         """Test fetching user activity for a single date."""
