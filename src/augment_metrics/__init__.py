@@ -13,6 +13,7 @@ from .analytics_client import (
     AnalyticsAPIError,
     PaginationError,
 )
+from .transformer import MetricsTransformer, TransformationError
 
 __version__ = "0.1.0"
 __author__ = "Augment Solutions"
@@ -34,4 +35,7 @@ __all__ = [
     "AnalyticsClient",
     "AnalyticsAPIError",
     "PaginationError",
+    # Data Transformation
+    "MetricsTransformer",
+    "TransformationError",
 ]
