@@ -45,8 +45,9 @@ pip install augment-to-copilot-metrics
 
 1. **Create a service account** in Augment:
    - Visit: https://app.augmentcode.com/settings/service-accounts
-   - Click "Create Service Account"
-   - Give it a name (e.g., "Metrics Export")
+   - Click "Service Accounts" on the left sidebar
+   - Select "Add Service Account"
+   - Give it a name (e.g., "Metrics Export") and description and click "Add"
 
 2. **Generate an API token**:
    - Click "Create Token" for your service account
