@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added (PR #7 - Testing and Validation)
+- `tests/test_integration.py` - Integration test suite (3 tests)
+  - Test API client to transformer integration
+  - Test transformer to file output integration
+  - Test complete end-to-end workflow
+- `tests/test_main.py` - Entry point tests (3 tests)
+  - Test `__main__.py` module existence
+  - Test module execution with `--help` flag
+  - Test module execution with `--version` flag
+- `.github/workflows/test.yml` - GitHub Actions CI/CD pipeline
+  - Matrix testing across Ubuntu, macOS, and Windows
+  - Python versions: 3.10, 3.11, 3.12, 3.13, 3.14
+  - Jobs: test, lint, security, coverage-report
+  - Tools: pytest, black, flake8, mypy, bandit, safety
+  - Codecov integration for coverage reporting
+
+### Changed
+- Test count increased from 83 to 89 tests
+- Coverage improved from 87% to 88%
+- `__main__.py` coverage improved from 0% to 100%
+
 ### Added (PR #6 - CLI and Configuration)
 - `src/augment_metrics/cli.py` - Command-line interface module (391 lines)
 - `src/augment_metrics/__main__.py` - Module entry point for `python -m augment_metrics`
