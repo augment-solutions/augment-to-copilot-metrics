@@ -26,63 +26,63 @@ from augment_metrics.cli import (
 
 class TestParseArgs:
     """Tests for parse_args function."""
-    
+
     def test_parse_args_last_28_days(self):
         """Test parsing --last-28-days argument."""
         args = parse_args(["--last-28-days"])
         assert args.last_28_days is True
         assert args.start_date is None
         assert args.end_date is None
-    
+
     def test_parse_args_date_range(self):
         """Test parsing --start-date and --end-date arguments."""
         args = parse_args(["--start-date", "2026-01-01", "--end-date", "2026-01-31"])
         assert args.start_date == "2026-01-01"
         assert args.end_date == "2026-01-31"
         assert args.last_28_days is False
-    
+
     def test_parse_args_output_dir(self):
         """Test parsing --output-dir argument."""
         args = parse_args(["--last-28-days", "--output-dir", "./custom"])
         assert args.output_dir == "./custom"
-    
+
     def test_parse_args_aggregate(self):
         """Test parsing --aggregate argument."""
         args = parse_args(["--last-28-days", "--aggregate"])
         assert args.aggregate is True
-    
+
     def test_parse_args_csv_only(self):
         """Test parsing --csv-only argument."""
         args = parse_args(["--last-28-days", "--csv-only"])
         assert args.csv_only is True
         assert args.json_only is False
-    
+
     def test_parse_args_json_only(self):
         """Test parsing --json-only argument."""
         args = parse_args(["--last-28-days", "--json-only"])
         assert args.json_only is True
         assert args.csv_only is False
-    
+
     def test_parse_args_verbose(self):
         """Test parsing --verbose argument."""
         args = parse_args(["--last-28-days", "--verbose"])
         assert args.verbose is True
-    
+
     def test_parse_args_no_date_range_error(self):
         """Test error when no date range is provided."""
         with pytest.raises(SystemExit):
             parse_args([])
-    
+
     def test_parse_args_start_date_without_end_date_error(self):
         """Test error when --start-date is provided without --end-date."""
         with pytest.raises(SystemExit):
             parse_args(["--start-date", "2026-01-01"])
-    
+
     def test_parse_args_end_date_without_start_date_error(self):
         """Test error when --end-date is provided without --start-date."""
         with pytest.raises(SystemExit):
             parse_args(["--end-date", "2026-01-31"])
-    
+
     def test_parse_args_csv_only_and_json_only_error(self):
         """Test error when both --csv-only and --json-only are provided."""
         with pytest.raises(SystemExit):
@@ -91,16 +91,16 @@ class TestParseArgs:
 
 class TestValidateDate:
     """Tests for validate_date function."""
-    
+
     def test_validate_date_valid(self):
         """Test validation of valid date."""
         assert validate_date("2026-01-15") == "2026-01-15"
-    
+
     def test_validate_date_invalid_format(self):
         """Test validation of invalid date format."""
         with pytest.raises(ValueError, match="Invalid date format"):
             validate_date("2026-13-45")
-    
+
     def test_validate_date_invalid_format_wrong_separator(self):
         """Test validation of date with wrong separator."""
         with pytest.raises(ValueError, match="Invalid date format"):
@@ -109,38 +109,34 @@ class TestValidateDate:
 
 class TestGetDateRange:
     """Tests for get_date_range function."""
-    
+
     def test_get_date_range_last_28_days(self):
         """Test getting date range for last 28 days."""
         args = argparse.Namespace(last_28_days=True, start_date=None, end_date=None)
         start_date, end_date = get_date_range(args)
-        
+
         # Verify format
         datetime.strptime(start_date, "%Y-%m-%d")
         datetime.strptime(end_date, "%Y-%m-%d")
-        
+
         # Verify range is 28 days
         start = datetime.strptime(start_date, "%Y-%m-%d")
         end = datetime.strptime(end_date, "%Y-%m-%d")
         assert (end - start).days == 27  # 28 days total including both dates
-    
+
     def test_get_date_range_custom_range(self):
         """Test getting custom date range."""
         args = argparse.Namespace(
-            last_28_days=False,
-            start_date="2026-01-01",
-            end_date="2026-01-31"
+            last_28_days=False, start_date="2026-01-01", end_date="2026-01-31"
         )
         start_date, end_date = get_date_range(args)
         assert start_date == "2026-01-01"
         assert end_date == "2026-01-31"
-    
+
     def test_get_date_range_start_after_end_error(self):
         """Test error when start date is after end date."""
         args = argparse.Namespace(
-            last_28_days=False,
-            start_date="2026-01-31",
-            end_date="2026-01-01"
+            last_28_days=False, start_date="2026-01-31", end_date="2026-01-01"
         )
         with pytest.raises(ValueError, match="Start date.*must be before"):
             get_date_range(args)
@@ -191,10 +187,7 @@ class TestWriteCsvFile:
 
     def test_write_csv_file(self, tmp_path):
         """Test writing CSV file."""
-        rows = [
-            {"name": "Alice", "age": 30},
-            {"name": "Bob", "age": 25}
-        ]
+        rows = [{"name": "Alice", "age": 30}, {"name": "Bob", "age": 25}]
         filepath = tmp_path / "test.csv"
 
         write_csv_file(rows, filepath)
@@ -221,11 +214,7 @@ class TestRunExport:
     @patch("augment_metrics.cli.AnalyticsClient")
     @patch("augment_metrics.cli.MetricsTransformer")
     def test_run_export_success(
-        self,
-        mock_transformer_class,
-        mock_analytics_class,
-        tmp_path,
-        monkeypatch
+        self, mock_transformer_class, mock_analytics_class, tmp_path, monkeypatch
     ):
         """Test successful export."""
         # Setup mocks
@@ -248,7 +237,7 @@ class TestRunExport:
                     "ide_agent_lines_of_code": 0,
                     "cli_agent_interactive_lines_of_code": 0,
                     "cli_agent_non_interactive_lines_of_code": 0,
-                }
+                },
             }
         ]
         mock_analytics.fetch_dau_count.return_value = [{"active_user_count": 1}]
@@ -259,11 +248,11 @@ class TestRunExport:
             "date": "2026-01-01",
             "total_active_users": 1,
             "total_engaged_users": 1,
-            "breakdown": []
+            "breakdown": [],
         }
         mock_transformer.transform_to_csv_row.return_value = {
             "User": "alice@example.com",
-            "Active Days": 5
+            "Active Days": 5,
         }
         mock_transformer_class.return_value = mock_transformer
 
@@ -281,7 +270,7 @@ class TestRunExport:
             aggregate=False,
             csv_only=False,
             json_only=False,
-            verbose=False
+            verbose=False,
         )
 
         exit_code = run_export(args)
@@ -289,4 +278,3 @@ class TestRunExport:
         assert exit_code == 0
         assert mock_analytics.fetch_user_activity.called
         assert mock_analytics.fetch_dau_count.called
-

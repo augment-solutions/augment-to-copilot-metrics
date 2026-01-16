@@ -8,11 +8,11 @@ from augment_metrics.transformer import MetricsTransformer, TransformationError
 
 class TestMetricsTransformer:
     """Tests for MetricsTransformer class."""
-    
+
     def test_transform_user_metrics_basic(self):
         """Test basic user metrics transformation."""
         transformer = MetricsTransformer()
-        
+
         user_activity = [
             {
                 "user_email": "alice@example.com",
@@ -33,47 +33,47 @@ class TestMetricsTransformer:
                     "cli_agent_non_interactive_lines_of_code": 5,
                     "total_tool_calls": 120,
                     "total_messages": 65,
-                }
+                },
             }
         ]
-        
+
         result = transformer.transform_user_metrics(user_activity, "2026-01-15")
-        
+
         # Check top-level fields
         assert result["date"] == "2026-01-15"
         assert result["total_active_users"] == 1
         assert result["total_engaged_users"] == 1
-        
+
         # Check feature engagement
         assert result["copilot_ide_code_completions"]["total_engaged_users"] == 1
         assert result["copilot_ide_chat"]["total_engaged_users"] == 1
         assert result["copilot_dotcom_chat"]["total_engaged_users"] == 0
         assert result["copilot_dotcom_pull_requests"]["total_engaged_users"] == 0
-        
+
         # Check breakdown
         assert len(result["breakdown"]) == 1
         user = result["breakdown"][0]
-        
+
         assert user["user_email"] == "alice@example.com"
         assert user["active_days"] == 5
         assert user["code_generation_activity_count"] == 320
         assert user["code_acceptance_activity_count"] == 280
         assert user["loc_added_sum"] == 450
         assert user["chat_panel"]["user_initiated_interaction_count"] == 25
-        
+
         # Check agent edit aggregation (10 + 30 + 8 + 5 = 53)
         assert user["agent_edit"]["user_initiated_interaction_count"] == 53
-        
+
         # Check agent edit LOC aggregation (45 + 40 + 10 + 5 = 100)
         assert user["agent_edit"]["loc_added_sum"] == 100
-        
+
         # Check code completions LOC
         assert user["code_completions"]["loc_added_sum"] == 350
-    
+
     def test_transform_user_metrics_multiple_users(self):
         """Test transformation with multiple users."""
         transformer = MetricsTransformer()
-        
+
         user_activity = [
             {
                 "user_email": "alice@example.com",
@@ -92,7 +92,7 @@ class TestMetricsTransformer:
                     "ide_agent_lines_of_code": 0,
                     "cli_agent_interactive_lines_of_code": 0,
                     "cli_agent_non_interactive_lines_of_code": 0,
-                }
+                },
             },
             {
                 "user_email": "bob@example.com",
@@ -111,24 +111,24 @@ class TestMetricsTransformer:
                     "ide_agent_lines_of_code": 15,
                     "cli_agent_interactive_lines_of_code": 0,
                     "cli_agent_non_interactive_lines_of_code": 0,
-                }
-            }
+                },
+            },
         ]
-        
+
         result = transformer.transform_user_metrics(user_activity, "2026-01-15")
-        
+
         assert result["total_active_users"] == 2
         assert result["total_engaged_users"] == 2
         assert result["copilot_ide_code_completions"]["total_engaged_users"] == 2
         assert result["copilot_ide_chat"]["total_engaged_users"] == 2
         assert len(result["breakdown"]) == 2
-        
+
         # Check first user
         alice = result["breakdown"][0]
         assert alice["user_email"] == "alice@example.com"
         assert alice["agent_edit"]["user_initiated_interaction_count"] == 5
         assert alice["agent_edit"]["loc_added_sum"] == 20
-        
+
         # Check second user
         bob = result["breakdown"][1]
         assert bob["user_email"] == "bob@example.com"
@@ -157,7 +157,7 @@ class TestMetricsTransformer:
                     "ide_agent_lines_of_code": 0,
                     "cli_agent_interactive_lines_of_code": 0,
                     "cli_agent_non_interactive_lines_of_code": 0,
-                }
+                },
             }
         ]
 
@@ -190,7 +190,7 @@ class TestMetricsTransformer:
                     "ide_agent_lines_of_code": 0,
                     "cli_agent_interactive_lines_of_code": 0,
                     "cli_agent_non_interactive_lines_of_code": 50,
-                }
+                },
             }
         ]
 
@@ -226,11 +226,7 @@ class TestMetricsTransformer:
         transformer = MetricsTransformer()
 
         user_activity = [
-            {
-                "user_email": "alice@example.com",
-                "active_days": 1,
-                "metrics": {}  # Empty metrics
-            }
+            {"user_email": "alice@example.com", "active_days": 1, "metrics": {}}  # Empty metrics
         ]
 
         result = transformer.transform_user_metrics(user_activity, "2026-01-15")
@@ -265,7 +261,7 @@ class TestMetricsTransformer:
                     "ide_agent_lines_of_code": 0,
                     "cli_agent_interactive_lines_of_code": 0,
                     "cli_agent_non_interactive_lines_of_code": 0,
-                }
+                },
             }
         ]
 
@@ -298,7 +294,7 @@ class TestMetricsTransformer:
                 "cli_agent_non_interactive_lines_of_code": 5,
                 "total_tool_calls": 120,
                 "total_messages": 65,
-            }
+            },
         }
 
         row = transformer.transform_to_csv_row(user)
@@ -346,7 +342,7 @@ class TestMetricsTransformer:
                 "cli_agent_interactive_lines_of_code": 0,
                 "cli_agent_non_interactive_lines_of_code": 10,
                 "total_tool_calls": 200,
-            }
+            },
         }
 
         row = transformer.transform_to_csv_row(user)
@@ -354,4 +350,3 @@ class TestMetricsTransformer:
         assert row["User"] == "ci-bot"
         assert row["Copilot Agent Interactions"] == 75  # 50 + 0 + 0 + 25
         assert row["CLI Agent LOC"] == 10  # 0 + 10
-

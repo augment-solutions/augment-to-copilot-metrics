@@ -25,10 +25,10 @@ logger = logging.getLogger(__name__)
 def parse_args(args: Optional[List[str]] = None) -> argparse.Namespace:
     """
     Parse command-line arguments.
-    
+
     Args:
         args: Optional list of arguments (for testing)
-        
+
     Returns:
         Parsed arguments
     """
@@ -55,79 +55,64 @@ Environment Variables:
   ENTERPRISE_ID        Your Augment enterprise ID
   OUTPUT_DIR           Output directory (default: ./data)
   LOG_LEVEL            Logging level (default: INFO)
-        """
+        """,
     )
-    
+
     # Date range options (mutually exclusive)
     date_group = parser.add_mutually_exclusive_group(required=True)
     date_group.add_argument(
-        "--last-28-days",
-        action="store_true",
-        help="Export metrics for the last 28 days"
+        "--last-28-days", action="store_true", help="Export metrics for the last 28 days"
     )
     date_group.add_argument(
         "--start-date",
         type=str,
         metavar="YYYY-MM-DD",
-        help="Start date for export (requires --end-date)"
+        help="Start date for export (requires --end-date)",
     )
-    
+
     # End date (required if start-date is provided)
     parser.add_argument(
         "--end-date",
         type=str,
         metavar="YYYY-MM-DD",
-        help="End date for export (requires --start-date)"
+        help="End date for export (requires --start-date)",
     )
-    
+
     # Output options
     parser.add_argument(
         "--output-dir",
         type=str,
         metavar="DIR",
-        help="Output directory (default: from OUTPUT_DIR env var or ./data)"
+        help="Output directory (default: from OUTPUT_DIR env var or ./data)",
     )
     parser.add_argument(
-        "--aggregate",
-        action="store_true",
-        help="Generate aggregated JSON file combining all days"
+        "--aggregate", action="store_true", help="Generate aggregated JSON file combining all days"
     )
     parser.add_argument(
-        "--csv-only",
-        action="store_true",
-        help="Only generate CSV output (skip JSON files)"
+        "--csv-only", action="store_true", help="Only generate CSV output (skip JSON files)"
     )
     parser.add_argument(
-        "--json-only",
-        action="store_true",
-        help="Only generate JSON output (skip CSV file)"
+        "--json-only", action="store_true", help="Only generate JSON output (skip CSV file)"
     )
-    
+
     # Other options
     parser.add_argument(
-        "--verbose",
-        "-v",
-        action="store_true",
-        help="Enable verbose logging (DEBUG level)"
+        "--verbose", "-v", action="store_true", help="Enable verbose logging (DEBUG level)"
     )
-    parser.add_argument(
-        "--version",
-        action="version",
-        version="%(prog)s 0.1.0"
-    )
-    
+    parser.add_argument("--version", action="version", version="%(prog)s 0.1.0")
+
     parsed = parser.parse_args(args)
-    
+
     # Validate date arguments
     if parsed.start_date and not parsed.end_date:
         parser.error("--start-date requires --end-date")
     if parsed.end_date and not parsed.start_date:
         parser.error("--end-date requires --start-date")
-    
+
     # Validate mutually exclusive output options
     if parsed.csv_only and parsed.json_only:
         parser.error("--csv-only and --json-only are mutually exclusive")
-    
+
     return parsed
 
 
@@ -176,7 +161,9 @@ def get_date_range(args: argparse.Namespace) -> tuple[str, str]:
 
         # Ensure start <= end
         if start_date > end_date:
-            raise ValueError(f"Start date ({start_date}) must be before or equal to end date ({end_date})")
+            raise ValueError(
+                f"Start date ({start_date}) must be before or equal to end date ({end_date})"
+            )
 
         return start_date, end_date
 
@@ -194,7 +181,7 @@ def setup_logging(verbose: bool = False) -> None:
     logging.basicConfig(
         level=level,
         format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-        datefmt="%Y-%m-%d %H:%M:%S"
+        datefmt="%Y-%m-%d %H:%M:%S",
     )
 
 
@@ -291,18 +278,14 @@ def run_export(args: argparse.Namespace) -> int:
         # Fetch and transform data
         logger.info("Fetching user activity data...")
         user_activity = analytics_client.fetch_user_activity(
-            start_date=start_date,
-            end_date=end_date
+            start_date=start_date, end_date=end_date
         )
 
         logger.info(f"Fetched data for {len(user_activity)} users")
 
         # Fetch DAU count for the date range
         logger.info("Fetching DAU count...")
-        dau_data = analytics_client.fetch_dau_count(
-            start_date=start_date,
-            end_date=end_date
-        )
+        dau_data = analytics_client.fetch_dau_count(start_date=start_date, end_date=end_date)
 
         # Calculate total DAU count across the date range
         # Use 'active_users' field (as per API spec and tests)
@@ -319,9 +302,7 @@ def run_export(args: argparse.Namespace) -> int:
         # Transform to Copilot format
         logger.info("Transforming metrics to Copilot format...")
         copilot_data = transformer.transform_user_metrics(
-            user_activity,
-            start_date,  # Use start_date as the primary date
-            dau_count=dau_count
+            user_activity, start_date, dau_count=dau_count  # Use start_date as the primary date
         )
 
         # Generate outputs
@@ -335,10 +316,7 @@ def run_export(args: argparse.Namespace) -> int:
             if args.aggregate:
                 # Create aggregated summary with totals across all users
                 aggregate_data = {
-                    "date_range": {
-                        "start": start_date,
-                        "end": end_date
-                    },
+                    "date_range": {"start": start_date, "end": end_date},
                     "summary": {
                         "total_active_users": copilot_data.get("total_active_users", 0),
                         "total_engaged_users": copilot_data.get("total_engaged_users", 0),
@@ -366,7 +344,7 @@ def run_export(args: argparse.Namespace) -> int:
                             for user in copilot_data.get("breakdown", [])
                         ),
                     },
-                    "full_data": copilot_data
+                    "full_data": copilot_data,
                 }
 
                 aggregate_filename = f"copilot_metrics_aggregate_{start_date}_to_{end_date}.json"
@@ -449,4 +427,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     sys.exit(main())
-
