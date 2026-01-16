@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added (PR #4 - Data Transformation Layer)
+- `src/augment_metrics/transformer.py` - Metrics transformation module
+- Comprehensive unit tests for transformer (10 tests)
+- Transform Augment Analytics metrics to Copilot format
+- User-level metrics transformation with field mapping
+- CSV export format with all Augment fields
+- Service account handling (user_email vs service_account_name)
+- Data integrity validation and warnings
+- Support for DAU count override
+
+### Changed
+- Updated `src/augment_metrics/__init__.py` to export transformer
+
 ### Added (PR #3 - Analytics API Client)
 - `src/augment_metrics/analytics_client.py` - Analytics API client with pagination
 - Comprehensive unit tests for Analytics API client (18 tests)
