@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Added (PR #5 - Data Transformation Layer)
+### Added (PR #4 - Data Transformation Layer)
 - `src/augment_metrics/transformer.py` - Metrics transformation module
 - Comprehensive unit tests for transformer (10 tests)
 - Transform Augment Analytics metrics to Copilot format
