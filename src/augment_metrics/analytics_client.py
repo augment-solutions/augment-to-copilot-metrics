@@ -286,12 +286,16 @@ class AnalyticsClient:
 
         Returns the number of active users per day.
 
+        Note: This endpoint has a different response structure than other endpoints.
+        It returns {"daily_active_user_counts": [...], "metadata": {...}} instead of
+        the standard {"data": [...], "pagination": {...}} format.
+
         Args:
             start_date: Start date in YYYY-MM-DD format
             end_date: End date in YYYY-MM-DD format
 
         Returns:
-            List of DAU count records
+            List of DAU count records, each with "date" and "user_count" fields
 
         Raises:
             ValueError: If date parameters are invalid
@@ -303,6 +307,7 @@ class AnalyticsClient:
             ...     start_date="2026-01-01",
             ...     end_date="2026-01-15"
             ... )
+            >>> # Returns: [{"date": "2026-01-01", "user_count": 42}, ...]
         """
         params = {
             "start_date": self._validate_date(start_date),
@@ -311,11 +316,26 @@ class AnalyticsClient:
 
         logger.info(f"Fetching DAU count: {params}")
 
-        # Fetch all pages
-        results = list(self._paginate("/analytics/v0/dau-count", params))
+        # This endpoint doesn't use the standard pagination format
+        # It returns {"daily_active_user_counts": [...], "metadata": {...}}
+        try:
+            response = self.http_client.get("/analytics/v0/dau-count", params=params)
+        except (HTTPError, AuthenticationError, RateLimitError) as e:
+            raise AnalyticsAPIError(f"Failed to fetch DAU count: {e}") from e
 
-        logger.info(f"Fetched {len(results)} DAU count records")
-        return results
+        # Validate response structure
+        if not isinstance(response, dict):
+            raise AnalyticsAPIError(f"Invalid response type: expected dict, got {type(response)}")
+
+        # Extract the daily_active_user_counts array
+        dau_counts = response.get("daily_active_user_counts", [])
+        if not isinstance(dau_counts, list):
+            raise AnalyticsAPIError(
+                f"Invalid daily_active_user_counts type: expected list, got {type(dau_counts)}"
+            )
+
+        logger.info(f"Fetched {len(dau_counts)} DAU count records")
+        return dau_counts
 
     def fetch_editor_language_breakdown(
         self,

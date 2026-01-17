@@ -280,18 +280,24 @@ class TestAnalyticsClient:
             api_token="test-token",
         )
 
+        # Mock the actual API response format for dau-count endpoint
         mock_get.return_value = {
-            "data": [
-                {"date": "2026-01-01", "active_users": 50},
-                {"date": "2026-01-02", "active_users": 55},
+            "daily_active_user_counts": [
+                {"date": "2026-01-01", "user_count": 50},
+                {"date": "2026-01-02", "user_count": 55},
             ],
-            "pagination": {"next_cursor": None},
+            "metadata": {
+                "effective_start_date": "2026-01-01",
+                "effective_end_date": "2026-01-02",
+                "total_days": 2,
+            },
         }
 
         results = client.fetch_dau_count(start_date="2026-01-01", end_date="2026-01-02")
 
         assert len(results) == 2
-        assert results[0]["active_users"] == 50
+        assert results[0]["user_count"] == 50
+        assert results[1]["user_count"] == 55
 
         # Verify API call
         call_args = mock_get.call_args
