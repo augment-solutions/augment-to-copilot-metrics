@@ -53,7 +53,7 @@ class AnalyticsClient:
         base_url: str = "https://api.augmentcode.com",
         timeout: int = 60,
         max_retries: int = 3,
-        page_size: int = 100,
+        page_size: Optional[int] = None,
     ):
         """
         Initialize Analytics API client.
@@ -63,11 +63,11 @@ class AnalyticsClient:
             base_url: Base URL for Analytics API
             timeout: Request timeout in seconds
             max_retries: Maximum number of retries for failed requests
-            page_size: Number of items per page for paginated requests
+            page_size: Number of items per page for paginated requests (None to use API default)
         """
-        # Validate page_size is a positive integer
-        if not isinstance(page_size, int) or page_size <= 0:
-            raise ValueError(f"page_size must be a positive integer, got {page_size}")
+        # Validate page_size if provided
+        if page_size is not None and (not isinstance(page_size, int) or page_size <= 0):
+            raise ValueError(f"page_size must be a positive integer or None, got {page_size}")
 
         self.page_size = page_size
         self.http_client = HTTPClient(
@@ -122,7 +122,11 @@ class AnalyticsClient:
 
         # Create a copy to avoid mutating the input
         request_params = params.copy()
-        request_params["limit"] = self.page_size
+
+        # Only add limit parameter if page_size is configured
+        if self.page_size is not None:
+            request_params["limit"] = self.page_size
+
         cursor = None
         page_num = 0
 
