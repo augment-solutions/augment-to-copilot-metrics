@@ -103,6 +103,7 @@ class AnalyticsClient:
         self,
         endpoint: str,
         params: Optional[Dict[str, Any]] = None,
+        data_field: str = "data",
     ) -> Iterator[Dict[str, Any]]:
         """
         Paginate through API responses using cursor-based pagination.
@@ -110,6 +111,7 @@ class AnalyticsClient:
         Args:
             endpoint: API endpoint to call
             params: Query parameters
+            data_field: Name of the field containing the data array (default: "data")
 
         Yields:
             Individual items from paginated response
@@ -151,10 +153,12 @@ class AnalyticsClient:
             if not isinstance(response, dict):
                 raise PaginationError(f"Invalid response type: expected dict, got {type(response)}")
 
-            # Get data from response
-            data = response.get("data", [])
+            # Get data from response using the specified field name
+            data = response.get(data_field, [])
             if not isinstance(data, list):
-                raise PaginationError(f"Invalid data type: expected list, got {type(data)}")
+                raise PaginationError(
+                    f"Invalid {data_field} type: expected list, got {type(data)}"
+                )
 
             # Yield each item
             for item in data:
@@ -229,8 +233,8 @@ class AnalyticsClient:
 
         logger.info(f"Fetching user activity: {params}")
 
-        # Fetch all pages
-        results = list(self._paginate("/analytics/v0/user-activity", params))
+        # Fetch all pages (user-activity endpoint uses "users" field)
+        results = list(self._paginate("/analytics/v0/user-activity", params, data_field="users"))
 
         logger.info(f"Fetched {len(results)} user activity records")
         return results
@@ -270,8 +274,8 @@ class AnalyticsClient:
 
         logger.info(f"Fetching daily usage: {params}")
 
-        # Fetch all pages
-        results = list(self._paginate("/analytics/v0/daily-usage", params))
+        # Fetch all pages (daily-usage endpoint uses "daily_usage" field)
+        results = list(self._paginate("/analytics/v0/daily-usage", params, data_field="daily_usage"))
 
         logger.info(f"Fetched {len(results)} daily usage records")
         return results
@@ -382,9 +386,13 @@ class AnalyticsClient:
 
         logger.info(f"Fetching editor/language breakdown: {params}")
 
-        # Fetch all pages
+        # Fetch all pages (daily-user-activity-by-editor-language endpoint uses "records" field)
         results = list(
-            self._paginate("/analytics/v0/daily-user-activity-by-editor-language", params)
+            self._paginate(
+                "/analytics/v0/daily-user-activity-by-editor-language",
+                params,
+                data_field="records",
+            )
         )
 
         logger.info(f"Fetched {len(results)} editor/language breakdown records")

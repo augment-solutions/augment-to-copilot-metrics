@@ -192,7 +192,7 @@ class TestAnalyticsClient:
         )
 
         mock_get.return_value = {
-            "data": [
+            "users": [
                 {"user_email": "user1@example.com", "total_edits": 10},
                 {"user_email": "user2@example.com", "total_edits": 20},
             ],
@@ -217,7 +217,7 @@ class TestAnalyticsClient:
         )
 
         mock_get.return_value = {
-            "data": [{"user_email": "user@example.com"}],
+            "users": [{"user_email": "user@example.com"}],
             "pagination": {"next_cursor": None},
         }
 
@@ -255,7 +255,7 @@ class TestAnalyticsClient:
         )
 
         mock_get.return_value = {
-            "data": [
+            "daily_usage": [
                 {"date": "2026-01-01", "total_edits": 100},
                 {"date": "2026-01-02", "total_edits": 150},
             ],
@@ -311,7 +311,7 @@ class TestAnalyticsClient:
         )
 
         mock_get.return_value = {
-            "data": [
+            "records": [
                 {
                     "user_email": "user@example.com",
                     "editor": "vscode",
@@ -341,7 +341,7 @@ class TestAnalyticsClient:
         )
 
         mock_get.return_value = {
-            "data": [{"editor": "vscode"}],
+            "records": [{"editor": "vscode"}],
             "pagination": {"next_cursor": None},
         }
 
