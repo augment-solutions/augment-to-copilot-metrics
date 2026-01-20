@@ -57,10 +57,10 @@ class TestIntegration:
             mock_http = MagicMock()
             MockHTTPClient.return_value = mock_http
 
-            # Set up mock responses
+            # Set up mock responses (using correct field names)
             mock_http.get.side_effect = [
-                {"data": sample_user_data, "pagination": {}},
-                {"data": [{"date": "2026-01-15", "active_users": 10}], "pagination": {}},
+                {"users": sample_user_data, "pagination": {}},
+                {"daily_active_user_counts": [{"date": "2026-01-15", "user_count": 10}], "metadata": {}},
             ]
 
             # Create client and fetch data
@@ -77,7 +77,7 @@ class TestIntegration:
 
             # Transform data
             transformer = MetricsTransformer()
-            dau_count = dau_count_data[0].get("active_users", 0)
+            dau_count = dau_count_data[0].get("user_count", 0)
             copilot_metrics = transformer.transform_user_metrics(
                 user_activity, test_date, dau_count
             )
@@ -142,8 +142,8 @@ class TestIntegration:
 
             # Set up mock responses
             mock_http.get.side_effect = [
-                {"data": sample_user_data, "pagination": {}},
-                {"data": [{"date": "2026-01-15", "active_users": 10}], "pagination": {}},
+                {"users": sample_user_data, "pagination": {}},
+                {"daily_active_user_counts": [{"date": "2026-01-15", "user_count": 10}], "metadata": {}},
             ]
 
             # Step 1: Fetch data from API
@@ -154,7 +154,7 @@ class TestIntegration:
 
             # Step 2: Transform data
             transformer = MetricsTransformer()
-            dau_count = dau_count_data[0].get("active_users", 0)
+            dau_count = dau_count_data[0].get("user_count", 0)
             copilot_metrics = transformer.transform_user_metrics(
                 user_activity, test_date, dau_count
             )
