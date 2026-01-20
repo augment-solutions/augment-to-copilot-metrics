@@ -168,16 +168,25 @@ mypy src/
 
 ### Augment Analytics API → Copilot JSON
 
-| Augment Field | Copilot Field | Notes |
-|---------------|---------------|-------|
-| `completions_count` | `code_generation_activity_count` | Direct mapping |
-| `completions_accepted` | `code_acceptance_activity_count` | Direct mapping |
-| `chat_messages` | `chat_panel.user_initiated_interaction_count` | Feature breakdown |
-| `remote_agent_messages` | `agent_edit.user_initiated_interaction_count` | Feature breakdown |
-| `total_modified_lines_of_code` | `loc_added_sum` | Direct mapping |
-| `total_tool_calls` | N/A | New metric (not in Copilot schema) |
+Each user in the `breakdown` array contains these fields:
 
-See [FIELD_MAPPING.md](docs/FIELD_MAPPING.md) for complete mappings.
+| Copilot Field | Augment Source | Description |
+|---------------|----------------|-------------|
+| `user_email` | `user_email` | User's email address |
+| `active_days` | `active_days` | Number of active days in period |
+| `code_generation_activity_count` | `completions_count` | Code completions generated |
+| `code_acceptance_activity_count` | `completions_accepted` | Code completions accepted |
+| `loc_added_sum` | `total_modified_lines_of_code` | Total lines of code modified |
+| `chat_panel.user_initiated_interaction_count` | `chat_messages` | Chat panel messages |
+| `agent_edit.user_initiated_interaction_count` | Sum of all agent messages* | Total agent interactions |
+| `agent_edit.loc_added_sum` | Sum of all agent LOC* | Lines from agent edits |
+| `code_completions.loc_added_sum` | `completions_lines_of_code` | Lines from completions |
+
+**Agent aggregations:**
+- `agent_edit.user_initiated_interaction_count` = `remote_agent_messages` + `ide_agent_messages` + `cli_agent_interactive_messages` + `cli_agent_non_interactive_messages`
+- `agent_edit.loc_added_sum` = `remote_agent_lines_of_code` + `ide_agent_lines_of_code` + `cli_agent_interactive_lines_of_code` + `cli_agent_non_interactive_lines_of_code`
+
+See [FIELD_MAPPING.md](docs/FIELD_MAPPING.md) for complete mappings and examples.
 
 ## 🔗 API Reference
 

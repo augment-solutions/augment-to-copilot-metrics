@@ -84,11 +84,27 @@ From `/analytics/v0/user-activity`:
 
 ## Field Mappings
 
+### Complete Breakdown Field Reference
+
+Each user in the `breakdown` array contains the following fields:
+
+| Copilot Field | Augment Source | Type | Description |
+|---------------|----------------|------|-------------|
+| `user_email` | `user_email` or `service_account_name` | string | User's email address or service account name |
+| `active_days` | `active_days` | integer | Number of days user was active in the period |
+| `code_generation_activity_count` | `metrics.completions_count` | integer | Number of code completions generated |
+| `code_acceptance_activity_count` | `metrics.completions_accepted` | integer | Number of code completions accepted |
+| `loc_added_sum` | `metrics.total_modified_lines_of_code` | integer | Total lines of code modified across all features |
+| `chat_panel.user_initiated_interaction_count` | `metrics.chat_messages` | integer | Number of chat panel messages |
+| `agent_edit.user_initiated_interaction_count` | Sum of all agent messages | integer | Total agent interactions (see calculation below) |
+| `agent_edit.loc_added_sum` | Sum of all agent LOC | integer | Total lines of code from agent edits (see calculation below) |
+| `code_completions.loc_added_sum` | `metrics.completions_lines_of_code` | integer | Lines of code from code completions |
+
 ### Direct Mappings
 
 | Augment Field | Copilot Field | Type | Notes |
 |---------------|---------------|------|-------|
-| `user_email` | `user_email` | string | Direct copy |
+| `user_email` | `user_email` | string | Direct copy (or `service_account_name` if user_email is null) |
 | `active_days` | `active_days` | integer | Direct copy |
 | `completions_count` | `code_generation_activity_count` | integer | Code completions generated |
 | `completions_accepted` | `code_acceptance_activity_count` | integer | Code completions accepted |
@@ -102,20 +118,27 @@ Augment has more granular metrics than Copilot. We aggregate them into Copilot's
 
 | Augment Field | Copilot Field | Calculation |
 |---------------|---------------|-------------|
-| `chat_messages` | `chat_panel.user_initiated_interaction_count` | Direct |
+| `chat_messages` | `chat_panel.user_initiated_interaction_count` | Direct mapping |
 
 #### Agent Edit (`agent_edit`)
 
-| Augment Fields | Copilot Field | Calculation |
-|----------------|---------------|-------------|
-| `remote_agent_messages` + `ide_agent_messages` + `cli_agent_interactive_messages` + `cli_agent_non_interactive_messages` | `agent_edit.user_initiated_interaction_count` | Sum of all agent messages |
-
-#### Lines of Code Breakdown
+**Interaction Count:**
 
 | Augment Fields | Copilot Field | Calculation |
 |----------------|---------------|-------------|
-| `completions_lines_of_code` | `code_completions.loc_added_sum` | Direct |
-| `remote_agent_lines_of_code` + `ide_agent_lines_of_code` + `cli_agent_interactive_lines_of_code` + `cli_agent_non_interactive_lines_of_code` | `agent_edit.loc_added_sum` | Sum of all agent LOC |
+| `remote_agent_messages`<br>+ `ide_agent_messages`<br>+ `cli_agent_interactive_messages`<br>+ `cli_agent_non_interactive_messages` | `agent_edit.user_initiated_interaction_count` | Sum of all agent message types |
+
+**Lines of Code:**
+
+| Augment Fields | Copilot Field | Calculation |
+|----------------|---------------|-------------|
+| `remote_agent_lines_of_code`<br>+ `ide_agent_lines_of_code`<br>+ `cli_agent_interactive_lines_of_code`<br>+ `cli_agent_non_interactive_lines_of_code` | `agent_edit.loc_added_sum` | Sum of all agent LOC types |
+
+#### Code Completions (`code_completions`)
+
+| Augment Field | Copilot Field | Calculation |
+|---------------|---------------|-------------|
+| `completions_lines_of_code` | `code_completions.loc_added_sum` | Direct mapping |
 
 ### Augment-Specific Fields (Not in Copilot Schema)
 
@@ -262,7 +285,66 @@ Maps to Copilot's editor/language arrays:
 
 ## Transformation Examples
 
-### Example 1: Basic User Metrics
+### Example 1: Complete User Breakdown Entry
+
+This shows all fields that appear in the `breakdown` array for each user:
+
+**Input (Augment Analytics API):**
+```json
+{
+  "user_email": "benperlmutter@augmentcode.com",
+  "active_days": 11,
+  "metrics": {
+    "completions_count": 12,
+    "completions_accepted": 2,
+    "completions_lines_of_code": 2,
+    "chat_messages": 3,
+    "remote_agent_messages": 100,
+    "remote_agent_lines_of_code": 15000,
+    "ide_agent_messages": 120,
+    "ide_agent_lines_of_code": 12000,
+    "cli_agent_interactive_messages": 20,
+    "cli_agent_interactive_lines_of_code": 1500,
+    "cli_agent_non_interactive_messages": 4,
+    "cli_agent_non_interactive_lines_of_code": 440,
+    "total_modified_lines_of_code": 28942
+  }
+}
+```
+
+**Output (Copilot Metrics API):**
+```json
+{
+  "user_email": "benperlmutter@augmentcode.com",
+  "active_days": 11,
+  "code_generation_activity_count": 12,
+  "code_acceptance_activity_count": 2,
+  "loc_added_sum": 28942,
+  "chat_panel": {
+    "user_initiated_interaction_count": 3
+  },
+  "agent_edit": {
+    "user_initiated_interaction_count": 244,
+    "loc_added_sum": 28940
+  },
+  "code_completions": {
+    "loc_added_sum": 2
+  }
+}
+```
+
+**Field Calculations:**
+- `code_generation_activity_count`: `completions_count` = **12**
+- `code_acceptance_activity_count`: `completions_accepted` = **2**
+- `loc_added_sum`: `total_modified_lines_of_code` = **28,942**
+- `chat_panel.user_initiated_interaction_count`: `chat_messages` = **3**
+- `agent_edit.user_initiated_interaction_count`:
+  - `remote_agent_messages` (100) + `ide_agent_messages` (120) + `cli_agent_interactive_messages` (20) + `cli_agent_non_interactive_messages` (4) = **244**
+- `agent_edit.loc_added_sum`:
+  - `remote_agent_lines_of_code` (15,000) + `ide_agent_lines_of_code` (12,000) + `cli_agent_interactive_lines_of_code` (1,500) + `cli_agent_non_interactive_lines_of_code` (440) = **28,940**
+- `code_completions.loc_added_sum`: `completions_lines_of_code` = **2**
+
+### Example 2: Basic User Metrics
 
 **Input (Augment):**
 ```json
@@ -288,21 +370,34 @@ Maps to Copilot's editor/language arrays:
   "loc_added_sum": 200,
   "chat_panel": {
     "user_initiated_interaction_count": 10
+  },
+  "agent_edit": {
+    "user_initiated_interaction_count": 0,
+    "loc_added_sum": 0
+  },
+  "code_completions": {
+    "loc_added_sum": 0
   }
 }
 ```
 
-### Example 2: Agent Metrics Aggregation
+### Example 3: Agent-Only User
 
 **Input (Augment):**
 ```json
 {
   "user_email": "carol@example.com",
+  "active_days": 5,
   "metrics": {
     "remote_agent_messages": 5,
+    "remote_agent_lines_of_code": 100,
     "ide_agent_messages": 10,
+    "ide_agent_lines_of_code": 200,
     "cli_agent_interactive_messages": 3,
-    "cli_agent_non_interactive_messages": 2
+    "cli_agent_interactive_lines_of_code": 50,
+    "cli_agent_non_interactive_messages": 2,
+    "cli_agent_non_interactive_lines_of_code": 30,
+    "total_modified_lines_of_code": 380
   }
 }
 ```
@@ -311,13 +406,26 @@ Maps to Copilot's editor/language arrays:
 ```json
 {
   "user_email": "carol@example.com",
+  "active_days": 5,
+  "code_generation_activity_count": 0,
+  "code_acceptance_activity_count": 0,
+  "loc_added_sum": 380,
+  "chat_panel": {
+    "user_initiated_interaction_count": 0
+  },
   "agent_edit": {
-    "user_initiated_interaction_count": 20
+    "user_initiated_interaction_count": 20,
+    "loc_added_sum": 380
+  },
+  "code_completions": {
+    "loc_added_sum": 0
   }
 }
 ```
 
-Calculation: 5 + 10 + 3 + 2 = 20
+**Calculation:**
+- Agent interactions: 5 + 10 + 3 + 2 = **20**
+- Agent LOC: 100 + 200 + 50 + 30 = **380**
 
 ## Notes
 
